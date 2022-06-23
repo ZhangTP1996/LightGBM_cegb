@@ -775,9 +775,9 @@ void SerialTreeLearner::ComputeBestSplitForFeature(
       constraints_->GetFeatureConstraint(leaf_splits->leaf_index(), feature_index), parent_output, &new_split);
   new_split.feature = real_fidx;
   if (cegb_ != nullptr) {
-    new_split.gain -=
-        cegb_->DeltaGain(feature_index, real_fidx, leaf_splits->leaf_index(),
-                         num_data, new_split);
+    new_split.gain *= 
+      (1 - cegb_->DeltaGain(feature_index, real_fidx, leaf_splits->leaf_index(),
+                         num_data, new_split));
   }
   if (new_split.monotone_type != 0) {
     double penalty = constraints_->ComputeMonotoneSplitGainPenalty(
