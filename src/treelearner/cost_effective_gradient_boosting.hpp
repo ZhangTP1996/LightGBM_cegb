@@ -76,7 +76,26 @@ class CostEfficientGradientBoosting {
     });
   }
 
-  double DeltaGain(int feature_index, int real_fidx, int leaf_index,
+//   double DeltaGain(int feature_index, int real_fidx, int leaf_index,
+//                    int num_data_in_leaf, SplitInfo split_info) {
+//     auto config = tree_learner_->config_;
+//     double delta =
+//         config->cegb_tradeoff * config->cegb_penalty_split * num_data_in_leaf;
+//     if (!config->cegb_penalty_feature_coupled.empty() &&
+//         !is_feature_used_in_split_[feature_index]) {
+//       delta += config->cegb_tradeoff *
+//                config->cegb_penalty_feature_coupled[real_fidx];
+//     }
+//     if (!config->cegb_penalty_feature_lazy.empty()) {
+//       delta += config->cegb_tradeoff *
+//                CalculateOndemandCosts(feature_index, real_fidx, leaf_index);
+//     }
+//     splits_per_leaf_[static_cast<size_t>(leaf_index) *
+//                          tree_learner_->train_data_->num_features() +
+//                      feature_index] = split_info;
+//     return delta;
+//   }
+    double DeltaGain(int feature_index, int real_fidx, int leaf_index,
                    int num_data_in_leaf, SplitInfo split_info) {
     auto config = tree_learner_->config_;
     double delta =
@@ -85,10 +104,6 @@ class CostEfficientGradientBoosting {
         !is_feature_used_in_split_[feature_index]) {
       delta += config->cegb_tradeoff *
                config->cegb_penalty_feature_coupled[real_fidx];
-    }
-    if (!config->cegb_penalty_feature_lazy.empty()) {
-      delta += config->cegb_tradeoff *
-               CalculateOndemandCosts(feature_index, real_fidx, leaf_index);
     }
     splits_per_leaf_[static_cast<size_t>(leaf_index) *
                          tree_learner_->train_data_->num_features() +
@@ -112,9 +127,9 @@ class CostEfficientGradientBoosting {
         auto split = &splits_per_leaf_[static_cast<size_t>(i) *
                                            train_data->num_features() +
                                        inner_feature_index];
-        split->gain +=
-            config->cegb_tradeoff *
-            config->cegb_penalty_feature_coupled[best_split_info->feature];
+        split->gain /=
+            (1 - config->cegb_tradeoff *
+              config->cegb_penalty_feature_coupled[best_split_info->feature]);
         // Avoid to update the leaf that cannot split
         if (ref_best_split_per_leaf[i].gain > kMinScore &&
             *split > ref_best_split_per_leaf[i]) {
